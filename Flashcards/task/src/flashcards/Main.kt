@@ -1,5 +1,7 @@
 package flashcards
 
+import java.io.File
+import java.io.FileNotFoundException
 import kotlin.random.Random
 
 fun main() {
@@ -8,6 +10,8 @@ fun main() {
         when (readLine()!!) {
             "add" -> Deck.add()
             "remove" -> Deck.remove()
+            "import" -> Deck.import()
+            "export" -> Deck.export()
             "ask" -> Deck.ask()
             "exit" -> {
                 println("Bye bye!")
@@ -50,6 +54,28 @@ object Deck {
         }
         cards.remove(term)
         println("The card has been removed.\n")
+    }
+
+    fun import() {
+        println("File name:")
+        val fileName = readLine()!!
+        try {
+            val text = File(fileName).readText()
+            val newCards = text.split("\n")
+                    .associate { it.split(":").zipWithNext().single() }
+            cards.putAll(newCards)
+            println("${newCards.size} cards have been loaded.")
+        } catch (e: FileNotFoundException) {
+            println("File not found.\n")
+        }
+    }
+
+    fun export() {
+        println("File name:")
+        val fileName = readLine()!!
+        val text = cards.entries.joinToString("\n") { "${it.key }:${it.value}" }
+        File(fileName).writeText(text)
+        println("${cards.size} cards have been saved.\n")
     }
 
     fun ask() {
