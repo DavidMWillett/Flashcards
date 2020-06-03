@@ -7,6 +7,7 @@ fun main() {
         println("Input the action (add, remove, import, export, ask, exit):")
         when (readLine()!!) {
             "add" -> Deck.add()
+            "remove" -> Deck.remove()
             "ask" -> Deck.ask()
             "exit" -> {
                 println("Bye bye!")
@@ -27,18 +28,28 @@ object Deck {
         println("The card:")
         val term = readLine()!!
         if (cards.containsKey(term)) {
-            println("The card \"$term\" already exists")
+            println("The card \"$term\" already exists.\n")
             return
         }
         println("The definition of the card:")
         val definition = readLine()!!
         if (cards.containsValue(definition)) {
-            println("The definition \"$definition\" already exists.")
+            println("The definition \"$definition\" already exists.\n")
             return
         }
         cards[term] = definition
-        println("The pair (\"$term\":\"$definition\") has been added.")
-        println()
+        println("The pair (\"$term\":\"$definition\") has been added.\n")
+    }
+
+    fun remove() {
+        println("The card:")
+        val term = readLine()!!
+        if (!cards.containsKey(term)) {
+            println("Can't remove \"$term\": there is no such card.\n")
+            return
+        }
+        cards.remove(term)
+        println("The card has been removed.\n")
     }
 
     fun ask() {
