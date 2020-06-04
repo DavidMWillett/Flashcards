@@ -6,7 +6,7 @@ import kotlin.random.Random
 
 fun main() {
     loop@ do {
-        Logger.println("Input the action (add, remove, import, export, ask, exit, log, hardest card):")
+        Logger.println("Input the action (add, remove, import, export, ask, exit, log, hardest card, reset stats):")
         when (Logger.readLine()) {
             "add" -> Deck.add()
             "remove" -> Deck.remove()
@@ -14,6 +14,7 @@ fun main() {
             "export" -> Deck.export()
             "ask" -> Deck.ask()
             "hardest card" -> Deck.hardestCard()
+            "reset stats" -> Deck.resetStats()
             "exit" -> {
                 Logger.println("Bye bye!")
                 break@loop
@@ -72,7 +73,7 @@ object Deck {
                 val (term, definition, mistakes) = it.split(":")
                 cardIndex[term] = Card(term, definition, mistakes.toInt())
             }
-            Logger.println("${records.size} cards have been loaded.")
+            Logger.println("${records.size} cards have been loaded.\n")
         } catch (e: FileNotFoundException) {
             Logger.println("File not found.\n")
         }
@@ -98,12 +99,12 @@ object Deck {
             if (answer == card.definition) {
                 Logger.println("Correct answer.")
             } else {
-                Logger.print("Wrong answer. The correct one is \"${card.definition}\"")
+                Logger.print("Wrong answer. (The correct one is \"${card.definition}\"")
                 if (cardIndex.containsCardWithDefinition(answer)) {
                     val term = cardIndex.getCardWithDefinition(answer).term
-                    Logger.print(", you've just written the definition of \"$term\"")
+                    Logger.print(", you've just written the definition of \"$term\" card")
                 }
-                Logger.println(".")
+                Logger.println(".)")
                 card.mistakes++
             }
         }
@@ -123,6 +124,11 @@ object Deck {
             "The hardest cards are ${hardestTerms.joinToString("\", \"", "\"", "\"")}. " +
                     "You have $maxErrors errors answering them.\n"
         })
+    }
+
+    fun resetStats() {
+        cardIndex.forEach { it.value.mistakes = 0 }
+        Logger.println("Card statistics has been reset.\n")
     }
 }
 
