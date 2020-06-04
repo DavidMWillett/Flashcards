@@ -6,13 +6,14 @@ import kotlin.random.Random
 
 fun main() {
     loop@ do {
-        Logger.println("Input the action (add, remove, import, export, ask, exit, log):")
+        Logger.println("Input the action (add, remove, import, export, ask, exit, log, hardest card):")
         when (Logger.readLine()) {
             "add" -> Deck.add()
             "remove" -> Deck.remove()
             "import" -> Deck.import()
             "export" -> Deck.export()
             "ask" -> Deck.ask()
+            "hardest card" -> Deck.hardestCard()
             "exit" -> {
                 Logger.println("Bye bye!")
                 break@loop
@@ -23,37 +24,41 @@ fun main() {
 }
 
 object Deck {
-    private val cards = mutableMapOf<String, String>()
+    private val cardIndex = mutableMapOf<String, Card>()
 
     private fun <K, V> Map<K, V>.random(): Map.Entry<K, V> = entries.elementAt(Random.nextInt(size))
 
-    private fun <K, V> Map<K, V>.getKey(value: V): K = filterValues { it == value }.keys.single()
+    private fun Map<String, Card>.containsCardWithDefinition(definition: String) =
+            filterValues { it.definition == definition }.isNotEmpty()
+
+    private fun Map<String, Card>.getCardWithDefinition(definition: String): Card =
+            filterValues { it.definition == definition }.values.single()
 
     fun add() {
         Logger.println("The card:")
         val term = Logger.readLine()
-        if (cards.containsKey(term)) {
+        if (cardIndex.containsKey(term)) {
             Logger.println("The card \"$term\" already exists.\n")
             return
         }
         Logger.println("The definition of the card:")
         val definition = Logger.readLine()
-        if (cards.containsValue(definition)) {
+        if (cardIndex.containsCardWithDefinition(definition)) {
             Logger.println("The definition \"$definition\" already exists.\n")
             return
         }
-        cards[term] = definition
+        cardIndex[term] = Card(term, definition)
         Logger.println("The pair (\"$term\":\"$definition\") has been added.\n")
     }
 
     fun remove() {
         Logger.println("The card:")
         val term = Logger.readLine()
-        if (!cards.containsKey(term)) {
+        if (!cardIndex.containsKey(term)) {
             Logger.println("Can't remove \"$term\": there is no such card.\n")
             return
         }
-        cards.remove(term)
+        cardIndex.remove(term)
         Logger.println("The card has been removed.\n")
     }
 
@@ -62,10 +67,12 @@ object Deck {
         val fileName = Logger.readLine()
         try {
             val text = File(fileName).readText()
-            val newCards = text.split("\n")
-                    .associate { it.split(":").zipWithNext().single() }
-            cards.putAll(newCards)
-            Logger.println("${newCards.size} cards have been loaded.")
+            val records = text.split("\n")
+            records.forEach {
+                val (term, definition, mistakes) = it.split(":")
+                cardIndex[term] = Card(term, definition, mistakes.toInt())
+            }
+            Logger.println("${records.size} cards have been loaded.")
         } catch (e: FileNotFoundException) {
             Logger.println("File not found.\n")
         }
@@ -74,31 +81,52 @@ object Deck {
     fun export() {
         Logger.println("File name:")
         val fileName = Logger.readLine()
-        val text = cards.entries.joinToString("\n") { "${it.key }:${it.value}" }
+        val text = cardIndex.entries.joinToString("\n") {
+            "${it.value.term}:${it.value.definition}:${it.value.mistakes}"
+        }
         File(fileName).writeText(text)
-        Logger.println("${cards.size} cards have been saved.\n")
+        Logger.println("${cardIndex.size} cards have been saved.\n")
     }
 
     fun ask() {
         Logger.println("How many times to ask?")
         val times = Logger.readLine().toInt()
         repeat(times) {
-            val card = cards.random()
-            Logger.println("Print the definition of \"${card.key}\":")
+            val card = cardIndex.random().value
+            Logger.println("Print the definition of \"${card.term}\":")
             val answer = Logger.readLine()
-            if (answer == card.value) {
+            if (answer == card.definition) {
                 Logger.println("Correct answer.")
             } else {
-                Logger.print("Wrong answer. The correct one is \"${card.value}\"")
-                if (cards.containsValue(answer)) {
-                    val definition = cards.getKey(answer)
-                    Logger.print(", you've just written the definition of \"$definition\"")
+                Logger.print("Wrong answer. The correct one is \"${card.definition}\"")
+                if (cardIndex.containsCardWithDefinition(answer)) {
+                    val term = cardIndex.getCardWithDefinition(answer).term
+                    Logger.print(", you've just written the definition of \"$term\"")
                 }
                 Logger.println(".")
+                card.mistakes++
             }
         }
     }
+
+    fun hardestCard() {
+        val maxErrors = cardIndex.maxBy { it.value.mistakes }?.value?.mistakes ?: 0
+        if (maxErrors == 0) {
+            Logger.println("There are no cards with errors.\n")
+            return
+        }
+        val hardestTerms = cardIndex.filter { it.value.mistakes == maxErrors }.keys
+        Logger.println(if (hardestTerms.size == 1) {
+            "The hardest card is \"${hardestTerms.single()}\". " +
+                    "You have $maxErrors errors answering it.\n"
+        } else {
+            "The hardest cards are ${hardestTerms.joinToString("\", \"", "\"", "\"")}. " +
+                    "You have $maxErrors errors answering them.\n"
+        })
+    }
 }
+
+class Card(val term: String, val definition: String, var mistakes: Int = 0)
 
 object Logger {
     private val log = mutableListOf<String>()
