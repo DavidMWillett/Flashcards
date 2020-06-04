@@ -6,17 +6,18 @@ import kotlin.random.Random
 
 fun main() {
     loop@ do {
-        println("Input the action (add, remove, import, export, ask, exit):")
-        when (readLine()!!) {
+        Logger.println("Input the action (add, remove, import, export, ask, exit, log):")
+        when (Logger.readLine()) {
             "add" -> Deck.add()
             "remove" -> Deck.remove()
             "import" -> Deck.import()
             "export" -> Deck.export()
             "ask" -> Deck.ask()
             "exit" -> {
-                println("Bye bye!")
+                Logger.println("Bye bye!")
                 break@loop
             }
+            "log" -> Logger.log()
         }
     } while (true)
 }
@@ -29,72 +30,99 @@ object Deck {
     private fun <K, V> Map<K, V>.getKey(value: V): K = filterValues { it == value }.keys.single()
 
     fun add() {
-        println("The card:")
-        val term = readLine()!!
+        Logger.println("The card:")
+        val term = Logger.readLine()
         if (cards.containsKey(term)) {
-            println("The card \"$term\" already exists.\n")
+            Logger.println("The card \"$term\" already exists.\n")
             return
         }
-        println("The definition of the card:")
-        val definition = readLine()!!
+        Logger.println("The definition of the card:")
+        val definition = Logger.readLine()
         if (cards.containsValue(definition)) {
-            println("The definition \"$definition\" already exists.\n")
+            Logger.println("The definition \"$definition\" already exists.\n")
             return
         }
         cards[term] = definition
-        println("The pair (\"$term\":\"$definition\") has been added.\n")
+        Logger.println("The pair (\"$term\":\"$definition\") has been added.\n")
     }
 
     fun remove() {
-        println("The card:")
-        val term = readLine()!!
+        Logger.println("The card:")
+        val term = Logger.readLine()
         if (!cards.containsKey(term)) {
-            println("Can't remove \"$term\": there is no such card.\n")
+            Logger.println("Can't remove \"$term\": there is no such card.\n")
             return
         }
         cards.remove(term)
-        println("The card has been removed.\n")
+        Logger.println("The card has been removed.\n")
     }
 
     fun import() {
-        println("File name:")
-        val fileName = readLine()!!
+        Logger.println("File name:")
+        val fileName = Logger.readLine()
         try {
             val text = File(fileName).readText()
             val newCards = text.split("\n")
                     .associate { it.split(":").zipWithNext().single() }
             cards.putAll(newCards)
-            println("${newCards.size} cards have been loaded.")
+            Logger.println("${newCards.size} cards have been loaded.")
         } catch (e: FileNotFoundException) {
-            println("File not found.\n")
+            Logger.println("File not found.\n")
         }
     }
 
     fun export() {
-        println("File name:")
-        val fileName = readLine()!!
+        Logger.println("File name:")
+        val fileName = Logger.readLine()
         val text = cards.entries.joinToString("\n") { "${it.key }:${it.value}" }
         File(fileName).writeText(text)
-        println("${cards.size} cards have been saved.\n")
+        Logger.println("${cards.size} cards have been saved.\n")
     }
 
     fun ask() {
-        println("How many times to ask?")
-        val times = readLine()!!.toInt()
+        Logger.println("How many times to ask?")
+        val times = Logger.readLine().toInt()
         repeat(times) {
             val card = cards.random()
-            println("Print the definition of \"${card.key}\":")
-            val answer = readLine()!!
+            Logger.println("Print the definition of \"${card.key}\":")
+            val answer = Logger.readLine()
             if (answer == card.value) {
-                println("Correct answer.")
+                Logger.println("Correct answer.")
             } else {
-                print("Wrong answer. The correct one is \"${card.value}\"")
+                Logger.print("Wrong answer. The correct one is \"${card.value}\"")
                 if (cards.containsValue(answer)) {
                     val definition = cards.getKey(answer)
-                    print(", you've just written the definition of \"$definition\"")
+                    Logger.print(", you've just written the definition of \"$definition\"")
                 }
-                println(".")
+                Logger.println(".")
             }
         }
+    }
+}
+
+object Logger {
+    private val log = mutableListOf<String>()
+
+    fun log() {
+        println("File name:")
+        val fileName = readLine()
+        File(fileName).writeText(log.joinToString(""))
+        println("The log has been saved.")
+    }
+
+    fun print(message: Any?) {
+        kotlin.io.print(message)
+        log.add("$message")
+    }
+
+    fun println(message: Any?) {
+        kotlin.io.println(message)
+        log.add("$message\n")
+    }
+
+    fun readLine(): String {
+        val message = kotlin.io.readLine()!!
+        log.add("$message\n")
+        return message
     }
 }
