@@ -97,14 +97,14 @@ object Deck {
             Logger.println("Print the definition of \"${card.term}\":")
             val answer = Logger.readLine()
             if (answer == card.definition) {
-                Logger.println("Correct answer.")
+                Logger.println("Correct answer.\n")
             } else {
                 Logger.print("Wrong answer. (The correct one is \"${card.definition}\"")
                 if (cardIndex.containsCardWithDefinition(answer)) {
                     val term = cardIndex.getCardWithDefinition(answer).term
                     Logger.print(", you've just written the definition of \"$term\" card")
                 }
-                Logger.println(".)")
+                Logger.println(".)\n")
                 card.mistakes++
             }
         }
@@ -141,7 +141,7 @@ object Logger {
         println("File name:")
         val fileName = readLine()
         File(fileName).writeText(log.joinToString(""))
-        println("The log has been saved.")
+        println("The log has been saved.\n")
     }
 
     fun print(message: Any?) {
