@@ -4,8 +4,13 @@ import java.io.File
 import java.io.FileNotFoundException
 import kotlin.random.Random
 
-fun main() {
+fun main(args: Array<String>) {
+    val params = args.toList().zipWithNext().toMap()
+    val inFileName = params["-import"]
+    if (inFileName != null) println(Flashcards.load(inFileName))
     Flashcards.run()
+    val outFileName = params["-export"]
+    if (outFileName != null) println(Flashcards.save(outFileName))
 }
 
 object Flashcards {
@@ -22,7 +27,9 @@ object Flashcards {
                     "remove" -> remove()
                     "import" -> import()
                     "export" -> export()
-                    "ask" -> { ask(); continue@loop }
+                    "ask" -> {
+                        ask(); continue@loop
+                    }
                     "hardest card" -> hardestCard()
                     "reset stats" -> resetStats()
                     "exit" -> break@loop
@@ -62,15 +69,23 @@ object Flashcards {
     private fun import(): String {
         val fileName = input("File name:")
         return try {
-            val cards = deck.import(fileName)
-            "$cards cards have been loaded."
+            load(fileName)
         } catch (e: FileNotFoundException) {
             "File not found."
         }
     }
 
+    fun load(fileName: String): String {
+        val cards = deck.import(fileName)
+        return "$cards cards have been loaded."
+    }
+
     private fun export(): String {
         val fileName = input("File name:")
+        return save(fileName)
+    }
+
+    fun save(fileName: String): String {
         val cards = deck.export(fileName)
         return "$cards cards have been saved."
     }
